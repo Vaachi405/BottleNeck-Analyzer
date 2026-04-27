@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Task Dependency & Bottleneck Analyzer</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <!-- TOP NAVBAR -->
+    <header class="navbar">
+        <div class="nav-left">
+            <h1>Task Dependency & Bottleneck Analyzer</h1>
+            <span class="subtitle">Project: Website Revamp System</span>
+        </div>
+        <div class="nav-right">
+            <span class="risk-badge high">HIGH RISK</span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container">
+        
+        <!-- STATS -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <p>Total Tasks</p>
+                <h2 id="totalTasks"></h2>
+            </div>
+            <div class="stat-card">
+                <p>Completed</p>
+                <h2 id="completedTasks">9</h2>
+            </div>
+            <div class="stat-card">
+                <p>Critical Tasks</p>
+                <h2 id="criticalTasks">4</h2>
+            </div>
+            <div class="stat-card">
+                <p>Bottlenecks</p>
+                <h2 id="bottleneckCount">2</h2>
+            </div>
+            <div class="stat-card">
+                <p>Overdue</p>
+                <h2 id="overdueTasks"></h2>
+            </div>
+        </section>
+
+      <!-- MAIN GRID -->
+      
+      <!-- ADD TASK FORM -->
+      <section class="card form-card">
+        <h3>Add New Task</h3>
+      
+        <div class="form-row">
+      
+          <div class="form-field">
+            <label>Task Name</label>
+            <input type="text" id="taskName" placeholder="Enter task name" />
+          </div>
+      
+          <div class="form-field">
+            <label>Duration</label>
+            <input type="number" id="taskDuration" placeholder="Days" />
+          </div>
+      
+          <div class="form-field">
+            <label>Dependencies</label>
+
+            <div class="dropdown">
+              <div class="dropdown-selected" id="dropdownSelected">
+                Select dependencies
+              </div>
+
+              <div class="dropdown-menu" id="dropdownMenu"></div>
+            </div>
+          </div>
+      
+          <button class="form-btn" onclick="addTask()">Add Task</button>
+      
+        </div>
+      </section>
+      <section class="dashboard-grid">
+      
+        <!-- GRAPH -->
+        <div class="card graph-card">
+          <div class="graph-header">
+            <h3>Task Dependency Graph</h3>
+            <span class="graph-status">Live</span>
+          </div>
+      
+          <div class="graph-container">
+            <svg id="graphSVG"></svg>
+          </div>
+        </div>
+      
+        <!-- SIDE PANEL -->
+        <div class="card side-panel">
+          <h3>Key Insights</h3>
+          <ul id="insightsList"></ul>
+        </div>
+      
+      </section>
+
+      <section class="gantt-section card">
+        <h3>Project Timeline (Gantt Chart)</h3>
+      
+        <div class="gantt-container" id="ganttContainer">
+          <!-- Bars will be generated dynamically -->
+        </div>
+      </section>
+
+        <!-- TASKS & BOTTLENECKS -->
+<section class="tasks-section">
+
+  <!-- TASK LIST -->
+  <div class="card task-list">
+    <h3>Task List</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Critical</th>
+        </tr>
+      </thead>
+      <tbody id="taskTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- BOTTLENECK PANEL -->
+  <div class="card bottleneck-panel">
+    <h3>Top Bottlenecks</h3>
+
+    <div id="bottleneckList"></div>
+  </div>
+
+</section>
+
+
+    </main>
+
+    <script src="js/script.js"></script>
+
+    <div id="tooltip" class="tooltip"></div>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Projects</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div class="top-bar">
+      <h2>Projects</h2>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="container">
+
+        <!-- PROJECT LIST -->
+        <div id="projectList" class="project-grid"></div>
+
+        <!-- ADD PROJECT -->
+        <div class="card add-project-card">
+            <h3>Create New Project</h3>
+
+            <div class="form-row">
+                <input type="text" id="projectName" placeholder="Project Name">
+
+                <select id="projectPriority">
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
+
+                <button onclick="addProject()">Add Project</button>
+            </div>
+        </div>
+
+    </div>
+    <script src="js/projects.js"></script>
+
+</body>
+</html>
