@@ -3,29 +3,71 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// signup
+// -----------------------------
+// SIGNUP
+// -----------------------------
 router.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    let { email, password } = req.body;
 
-  const exists = await User.findOne({ email });
+    email = email.trim().toLowerCase();
+    password = password.trim();
 
-  if (exists) return res.status(400).json("User exists");
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
-  const user = new User({ email, password });
-  await user.save();
+    const exists = await User.findOne({ email });
 
-  res.json("Signup success");
+    if (exists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const user = new User({ email, password });
+    await user.save();
+
+    console.log("User saved:", user);
+
+    res.status(201).json({
+      message: "Signup successful",
+      user
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-// login
+// -----------------------------
+// LOGIN
+// -----------------------------
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    let { email, password } = req.body;
 
-  const user = await User.findOne({ email, password });
+    email = email.trim().toLowerCase();
+    password = password.trim();
 
-  if (!user) return res.status(400).json("Invalid");
+    const user = await User.findOne({ email });
 
-  res.json(user);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (user.password !== password) {
+      return res.status(400).json({ message: "Wrong password" });
+    }
+
+    res.json({
+      message: "Login successful",
+      user
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 export default router;

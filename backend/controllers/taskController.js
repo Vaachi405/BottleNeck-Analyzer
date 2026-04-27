@@ -1,30 +1,71 @@
 import Task from "../models/Task.js";
 
+// -----------------------------
+// CREATE TASK
+// -----------------------------
 export const createTask = async (req, res) => {
-  const { name, duration, dependencies, projectId } = req.body;
+  try {
+    const { name, duration, dependencies, projectId } = req.body;
 
-  const count = await Task.countDocuments({ projectId });
+    if (!name || !duration || !projectId) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
-  const taskId = "t" + (count + 1);
+    const task = await Task.create({
+      name,
+      duration: Number(duration),
+      dependencies: dependencies || [],
+      projectId,
+      status: "pending",
+      priority: "medium"
+    });
 
-  const task = await Task.create({
-    id: taskId,
-    name,
-    duration,
-    dependencies: dependencies || [],
-    projectId
-  });
+    res.status(201).json(task);
 
-  res.json(task);
+  } catch (err) {
+    console.error("Create Task Error:", err);
+    res.status(500).json({ message: "Failed to create task" });
+  }
 };
 
+// -----------------------------
+// GET TASKS (BY PROJECT)
+// -----------------------------
 export const getTasks = async (req, res) => {
-  const { projectId } = req.query;
-  const tasks = await Task.find({ projectId });
-  res.json(tasks);
+  try {
+    const { projectId } = req.query;
+
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID required" });
+    }
+
+    const tasks = await Task.find({ projectId });
+
+    res.json(tasks);
+
+  } catch (err) {
+    console.error("Get Tasks Error:", err);
+    res.status(500).json({ message: "Failed to fetch tasks" });
+  }
 };
 
+// -----------------------------
+// DELETE TASK
+// -----------------------------
 export const deleteTask = async (req, res) => {
-  await Task.findByIdAndDelete(req.params.id);
-  res.json({ msg: "Deleted" });
+  try {
+    const taskId = req.params.id;
+
+    const deletedTask = await Task.findByIdAndDelete(taskId);
+
+    if (!deletedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully" });
+
+  } catch (err) {
+    console.error("Delete Task Error:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
 };
