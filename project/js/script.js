@@ -29,7 +29,7 @@ let tasks = [];
 
 async function loadTasks() {
   try {
-    const res = await fetch(`http://localhost:5000/api/tasks?projectId=${currentProjectId}`);
+    const res = await fetch(`https://bottleneck-analyzer-backend.onrender.com/api/tasks?projectId=${currentProjectId}`);
     const data = await res.json();
 
     console.log("API DATA:", data);
@@ -739,7 +739,7 @@ async function addTask() {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/tasks", {
+    const res = await fetch("https://bottleneck-analyzer-backend.onrender.com/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -915,7 +915,7 @@ async function deleteTask(taskId) {
   if (!confirm("Delete this task?")) return;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+    const res = await fetch(`https://bottleneck-analyzer-backend.onrender.com/api/tasks/${taskId}`, {
       method: "DELETE"
     });
 

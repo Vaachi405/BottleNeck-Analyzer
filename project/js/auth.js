@@ -1,4 +1,10 @@
 // -----------------------------
+// BASE URL (🔥 IMPORTANT)
+// -----------------------------
+const BASE_URL = "https://bottleneck-analyzer-backend.onrender.com";
+
+
+// -----------------------------
 // SIGNUP
 // -----------------------------
 async function signup() {
@@ -16,7 +22,7 @@ async function signup() {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/auth/signup", {
+    const res = await fetch(`${BASE_URL}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -35,7 +41,6 @@ async function signup() {
 
     alert("Signup successful");
 
-    // redirect to login
     window.location.href = "index.html";
 
   } catch (err) {
@@ -58,7 +63,7 @@ async function login() {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -77,8 +82,6 @@ async function login() {
 
     // ✅ STORE SESSION
     localStorage.setItem("loggedInUser", data.user._id);
-
-    
 
     window.location.href = "projects.html";
 

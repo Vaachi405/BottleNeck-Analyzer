@@ -1,35 +1,49 @@
 // -----------------------------
+// BASE URL (🔥 IMPORTANT)
+// -----------------------------
+const BASE_URL = "https://bottleneck-analyzer-backend.onrender.com";
+
+
+// -----------------------------
 // AUTH GUARD
 // -----------------------------
-
 const user = localStorage.getItem("loggedInUser");
 if (!user) {
   window.location.href = "index.html";
 }
+
 window.onload = () => {
   document.getElementById("projectName").value = "";
   document.getElementById("projectPriority").selectedIndex = 0;
 };
 
+
 // -----------------------------
 // PROJECT DATA
 // -----------------------------
-
 let projects = [];
+
+
+// -----------------------------
+// LOAD PROJECTS
+// -----------------------------
+async function loadProjects() {
+  const userId = localStorage.getItem("loggedInUser");
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/projects?userId=${userId}`);
+    projects = await res.json();
+
+    renderProjects();
+  } catch (err) {
+    console.error("Load projects error:", err);
+  }
+}
+
 
 // -----------------------------
 // RENDER PROJECTS
 // -----------------------------
-
-async function loadProjects() {
-  const userId = localStorage.getItem("loggedInUser");
-
-  const res = await fetch(`http://localhost:5000/api/projects?userId=${userId}`);
-  projects = await res.json();
-
-  renderProjects();
-}
-
 function renderProjects() {
   const container = document.getElementById("projectList");
   container.innerHTML = "";
@@ -48,14 +62,14 @@ function renderProjects() {
       <p>Priority: ${project.priority}</p>
     `;
 
-    // open project (only if not clicking delete)
+    // open project
     div.addEventListener("click", () => openProject(project._id));
 
     // delete button
     const deleteBtn = div.querySelector(".delete-project-btn");
 
     deleteBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // 🔥 prevent opening project
+      e.stopPropagation();
       deleteProject(project._id);
     });
 
@@ -63,6 +77,10 @@ function renderProjects() {
   });
 }
 
+
+// -----------------------------
+// ADD PROJECT
+// -----------------------------
 async function addProject() {
   const nameInput = document.getElementById("projectName");
   const prioritySelect = document.getElementById("projectPriority");
@@ -71,7 +89,6 @@ async function addProject() {
   const priority = prioritySelect.value;
   const userId = localStorage.getItem("loggedInUser");
 
-  // 🔥 VALIDATION
   if (!name) {
     alert("Enter project name");
     return;
@@ -83,9 +100,11 @@ async function addProject() {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/projects", {
+    const res = await fetch(`${BASE_URL}/api/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ name, priority, userId })
     });
 
@@ -95,11 +114,10 @@ async function addProject() {
 
     await res.json();
 
-    // 🔥 RESET FORM (IMPORTANT FIX)
+    // reset form
     nameInput.value = "";
     prioritySelect.selectedIndex = 0;
 
-    // 🔥 RELOAD PROJECTS
     loadProjects();
 
   } catch (err) {
@@ -108,6 +126,10 @@ async function addProject() {
   }
 }
 
+
+// -----------------------------
+// DELETE PROJECT
+// -----------------------------
 async function deleteProject(projectId) {
   if (!confirm("Delete this project?")) return;
 
@@ -115,21 +137,38 @@ async function deleteProject(projectId) {
     localStorage.removeItem("currentProject");
   }
 
-  await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-    method: "DELETE"
-  });
+  try {
+    await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+      method: "DELETE"
+    });
 
-  loadProjects();
+    loadProjects();
+
+  } catch (err) {
+    console.error("Delete project error:", err);
+  }
 }
 
+
+// -----------------------------
+// LOGOUT
+// -----------------------------
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "index.html";
 }
 
+
+// -----------------------------
+// OPEN PROJECT
+// -----------------------------
 function openProject(projectId) {
   localStorage.setItem("currentProject", projectId);
   window.location.href = "dashboard.html";
 }
 
+
+// -----------------------------
+// INIT
+// -----------------------------
 loadProjects();
