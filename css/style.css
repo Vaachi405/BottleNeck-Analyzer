@@ -735,3 +735,42 @@ body {
 .form-row button:hover {
     background: #4338ca;
 }
+.insights li {
+    padding: 8px;
+    border-left: 4px solid #6366f1;
+    margin-bottom: 8px;
+    background: #f9fafb;
+    border-radius: 6px;
+}
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background: #111827;
+    color: white;
+    padding: 20px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background: #f9fafb;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+}

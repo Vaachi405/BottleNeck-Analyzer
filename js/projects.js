@@ -6,6 +6,10 @@ const user = localStorage.getItem("loggedInUser");
 if (!user) {
   window.location.href = "index.html";
 }
+window.onload = () => {
+  document.getElementById("projectName").value = "";
+  document.getElementById("projectPriority").selectedIndex = 0;
+};
 
 // -----------------------------
 // PROJECT DATA
@@ -60,23 +64,48 @@ function renderProjects() {
 }
 
 async function addProject() {
-  const name = document.getElementById("projectName").value;
-  const priority = document.getElementById("projectPriority").value;
+  const nameInput = document.getElementById("projectName");
+  const prioritySelect = document.getElementById("projectPriority");
+
+  const name = nameInput.value.trim();
+  const priority = prioritySelect.value;
   const userId = localStorage.getItem("loggedInUser");
 
+  // 🔥 VALIDATION
   if (!name) {
     alert("Enter project name");
     return;
   }
 
-  const res = await fetch("http://localhost:5000/api/projects", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, priority, userId })
-  });
+  if (!priority) {
+    alert("Please select priority");
+    return;
+  }
 
-  await res.json();
-  loadProjects();
+  try {
+    const res = await fetch("http://localhost:5000/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, priority, userId })
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to create project");
+    }
+
+    await res.json();
+
+    // 🔥 RESET FORM (IMPORTANT FIX)
+    nameInput.value = "";
+    prioritySelect.selectedIndex = 0;
+
+    // 🔥 RELOAD PROJECTS
+    loadProjects();
+
+  } catch (err) {
+    console.error("Add project error:", err);
+    alert("Error creating project");
+  }
 }
 
 async function deleteProject(projectId) {

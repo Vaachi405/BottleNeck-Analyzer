@@ -1,58 +1,102 @@
 // -----------------------------
 // SIGNUP
 // -----------------------------
-function signup() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+async function signup() {
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value.trim();
 
   if (!email || !password) {
-    alert("Fill all fields");
+    alert("Enter all fields");
     return;
   }
 
-  // ✅ PASSWORD CONSTRAINT
   if (password.length < 6) {
     alert("Password must be at least 6 characters");
     return;
   }
 
-  const users = JSON.parse(localStorage.getItem("users")) || [];
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-  const exists = users.find(u => u.email === email);
+    const data = await res.json();
 
-  if (exists) {
-    alert("User already exists. Please login.");
-    return;
+    console.log("Signup response:", data);
+
+    if (!res.ok) {
+      alert(data.message || "User already exists");
+      return;
+    }
+
+    alert("Signup successful");
+
+    // redirect to login
+    window.location.href = "index.html";
+
+  } catch (err) {
+    console.error("Signup error:", err);
+    alert("Error connecting to server");
   }
-
-  users.push({ email, password });
-
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Signup successful!");
-  window.location.href = "index.html";
 }
+
 
 // -----------------------------
 // LOGIN
 // -----------------------------
-function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+async function login() {
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value.trim();
 
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-
-  const user = users.find(u => u.email === email && u.password === password);
-
-  if (!user) {
-    alert("Invalid credentials");
+  if (!email || !password) {
+    alert("Enter all fields");
     return;
   }
 
-  localStorage.setItem("loggedInUser", email);
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-  window.location.href = "projects.html";
+    const data = await res.json();
+
+    console.log("Login response:", data);
+
+    if (!res.ok) {
+      alert(data.message || "Invalid credentials");
+      return;
+    }
+
+    // ✅ STORE SESSION
+    localStorage.setItem("loggedInUser", data.user._id);
+
+    
+
+    window.location.href = "projects.html";
+
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Server error");
+  }
 }
+
+
+// -----------------------------
+// LOGOUT
+// -----------------------------
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "index.html";
+}
+
 
 // -----------------------------
 // NAVIGATION

@@ -28,22 +28,39 @@ if (!currentProjectId) {
 let tasks = [];
 
 async function loadTasks() {
-  const res = await fetch(`http://localhost:5000/api/tasks?projectId=${currentProjectId}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`http://localhost:5000/api/tasks?projectId=${currentProjectId}`);
+    const data = await res.json();
 
-  console.log("API DATA:", data);
+    console.log("API DATA:", data);
 
-  tasks = data.map((t, i) => ({
-    id: t.id || "t" + (i + 1),
-    name: t.name,
-    duration: Number(t.duration) || 1,
-    dependencies: t.dependencies || [],
-    status: t.status || "pending"
-  }));
+    // 🔥 STEP 1: update tasks
+    tasks = data.map((t, i) => ({
+      id: t._id,
+      shortId: "t" + (i + 1),
+      name: t.name,
+      duration: Number(t.duration) || 1,
+      dependencies: t.dependencies || [],
+      status: t.status || "pending"
+    }));
 
-  console.log("TASKS AFTER LOAD:", tasks);
+    console.log("TASKS AFTER LOAD:", tasks);
 
-  recalculateSystem(); // ✅ ONLY PLACE WHERE CALCULATION HAPPENS
+    // 🔥 STEP 2: clean invalid dependencies
+    selectedDependencies = selectedDependencies.filter(id =>
+      tasks.some(t => t.id === id)
+    );
+
+    // 🔥 STEP 3: update dropdown
+    renderDependencyDropdown();
+    updateDropdownDisplay();
+
+    // 🔥 STEP 4: NOW recalculate EVERYTHING
+    recalculateSystem();
+
+  } catch (err) {
+    console.error("Load tasks error:", err);
+  }
 }
 
 console.log("Tasks loaded:", tasks);
@@ -366,24 +383,34 @@ sortedBottlenecks.forEach(([taskId, score]) => {
 
 function renderDependencyDropdown() {
   const menu = document.getElementById("dropdownMenu");
+
+  // 🔥 Clear old items
   menu.innerHTML = "";
+
+  // 🔥 Remove invalid dependencies (deleted tasks)
+  selectedDependencies = selectedDependencies.filter(id =>
+    tasks.some(task => task.id === id)
+  );
 
   tasks.forEach(task => {
     const item = document.createElement("div");
     item.className = "dropdown-item";
 
+    const isChecked = selectedDependencies.includes(task.id);
+
     item.innerHTML = `
-      <input type="checkbox" value="${task.id}" ${
-        selectedDependencies.includes(task.id) ? "checked" : ""
-      } />
-      ${task.name} (${task.id})
+      <input type="checkbox" value="${task.id}" ${isChecked ? "checked" : ""} />
+      ${task.name} (${task.shortId})
     `;
 
     const checkbox = item.querySelector("input");
 
     checkbox.addEventListener("change", () => {
       if (checkbox.checked) {
-        selectedDependencies.push(task.id);
+        // ✅ prevent duplicates
+        if (!selectedDependencies.includes(task.id)) {
+          selectedDependencies.push(task.id);
+        }
       } else {
         selectedDependencies = selectedDependencies.filter(id => id !== task.id);
       }
@@ -401,7 +428,12 @@ function updateDropdownDisplay() {
   if (selectedDependencies.length === 0) {
     display.innerText = "Select dependencies";
   } else {
-    display.innerText = selectedDependencies.join(", ");
+    const names = selectedDependencies.map(id => {
+      const task = tasks.find(t => t.id === id);
+      return task ? task.shortId : id;
+    });
+
+    display.innerText = names.join(", ");
   }
 }
 
@@ -431,31 +463,23 @@ function updateStats() {
 
 function updateInsights() {
   const list = document.getElementById("insightsList");
-
-  if (!list) return;
-
-  // 🔥 clear completely
   list.innerHTML = "";
 
-  // -----------------------------
-  // BOTTLENECK INSIGHT
-  // -----------------------------
+  // 1. Bottleneck insight
   if (sortedBottlenecks.length > 0) {
-    const [taskId] = sortedBottlenecks[0];
+    const [taskId, score] = sortedBottlenecks[0];
     const task = tasks.find(t => t.id === taskId);
 
     const li = document.createElement("li");
-    li.innerText = `${task?.name || taskId} is blocking ${dependencyGraph[taskId]?.length || 0} tasks`;
+    li.innerText = `${task.name} is the biggest bottleneck (score: ${score})`;
     list.appendChild(li);
   }
 
-  // -----------------------------
-  // CRITICAL PATH INSIGHT
-  // -----------------------------
+  // 2. Critical path insight
   if (criticalPath.length > 0) {
     const names = criticalPath.map(id => {
       const t = tasks.find(x => x.id === id);
-      return t ? t.name : id;
+      return t?.name;
     });
 
     const li = document.createElement("li");
@@ -463,18 +487,14 @@ function updateInsights() {
     list.appendChild(li);
   }
 
-  // -----------------------------
-  // PROJECT DURATION INSIGHT
-  // -----------------------------
-  if (projectDuration > 0) {
+  // 3. Risk insight
+  if (projectDuration > 10) {
     const li = document.createElement("li");
-    li.innerText = `Total duration: ${projectDuration} days`;
+    li.innerText = "Project risk is high due to long duration";
     list.appendChild(li);
   }
 
-  // -----------------------------
-  // EMPTY STATE
-  // -----------------------------
+  // 4. Empty state
   if (list.children.length === 0) {
     const li = document.createElement("li");
     li.innerText = "No insights available";
@@ -517,7 +537,7 @@ function renderTaskTable() {
       <td><span class="status ${task.status}">${task.status}</span></td>
       <td>${task.priority}</td>
       <td>${isCritical ? "Yes" : "No"}</td>
-      <td><button class="delete-btn" data-id="${task._id}">Delete</button></td>
+      <td><button class="delete-btn" data-id="${task.id}">Delete</button></td>
     `;
 
     row.addEventListener("mousemove", (e) => {
@@ -718,26 +738,41 @@ async function addTask() {
     return;
   }
 
-  const res = await fetch("http://localhost:5000/api/tasks", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name,
-      duration,
-      dependencies: selectedDependencies || [],
-      projectId: currentProjectId
-    })
-  });
+  try {
+    const res = await fetch("http://localhost:5000/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        duration,
+        dependencies: selectedDependencies || [],
+        projectId: currentProjectId
+      })
+    });
 
-  await res.json();
+    const data = await res.json();
 
-  // reset form
-  document.getElementById("taskName").value = "";
-  document.getElementById("taskDuration").value = "";
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to add task");
+    }
 
-  selectedDependencies = [];
-  updateDropdownDisplay();
-  loadTasks();
+    // ✅ SUCCESS FEEDBACK
+    console.log("Task added:", data);
+    alert("Task added successfully");
+
+    // reset form
+    document.getElementById("taskName").value = "";
+    document.getElementById("taskDuration").value = "";
+
+    selectedDependencies = [];
+    
+    await loadTasks(); // ✅ wait for reload
+    updateDropdownDisplay();
+
+  } catch (err) {
+    console.error("Add Task Error:", err);
+    alert("Error adding task");
+  }
 }
 
 // -----------------------------
@@ -777,13 +812,14 @@ sortedBottlenecks = [];
   // HANDLE EMPTY TASKS
   // -----------------------------
   if (tasks.length === 0) {
-    updateStats();
-    renderTaskTable();
-    renderBottlenecks();
-    renderGraph();
-    renderGanttChart();
-    return;
-  }
+  updateStats();
+  renderTaskTable();
+  renderBottlenecks();
+  renderGraph();
+  renderGanttChart();
+  updateInsights(); // 🔥 ADD THIS LINE
+  return;
+}
 
   // -----------------------------
   // TOPOLOGICAL ORDER
@@ -878,11 +914,29 @@ sortedBottlenecks = [];
 async function deleteTask(taskId) {
   if (!confirm("Delete this task?")) return;
 
-  await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
-    method: "DELETE"
-  });
+  try {
+    const res = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      method: "DELETE"
+    });
 
-  loadTasks();
+    if (!res.ok) throw new Error("Delete failed");
+
+    // remove only deleted dependency
+    selectedDependencies = selectedDependencies.filter(id => id !== taskId);
+
+    // clear dropdown
+    const menu = document.getElementById("dropdownMenu");
+    if (menu) menu.innerHTML = "";
+
+    await loadTasks();
+
+    
+
+    updateDropdownDisplay();
+
+  } catch (err) {
+    console.error("Delete error:", err);
+  }
 }
 
 // -----------------------------
