@@ -52,7 +52,12 @@ Bottleneck Analyzer is a web-based project management application that helps use
 ---
 
 ## 📸 Screenshots
-*(Add your project screenshots here)*
+<img width="1920" height="1128" alt="Screenshot 2026-05-02 163552" src="https://github.com/user-attachments/assets/1f684fe2-bc9b-4c7e-8ed6-3b3f32ecfadd" />
+
+<img width="1920" height="1128" alt="image" src="https://github.com/user-attachments/assets/59fc8e37-f6ae-44fd-8edb-ef526df73621" />
+<img width="1920" height="1128" alt="image" src="https://github.com/user-attachments/assets/8e5f169e-b0d0-4047-a22b-f06b93f9766f" />
+
+
 
 ---
 
